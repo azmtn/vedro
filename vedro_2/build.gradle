@@ -1,0 +1,24 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext {
+        coreKtx = '1.9.0'
+        appcompat = '1.6.1'
+        material = '1.8.0'
+        kotlin = '1.8.0'
+        navigationFragmentVersion = '2.4.1'
+        navigationUiVersion = '2.4.1'
+
+    }
+    repositories {
+        mavenCentral()
+        google()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin"
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

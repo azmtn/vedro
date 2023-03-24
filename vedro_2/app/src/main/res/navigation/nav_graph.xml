@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph.xml"
+    app:startDestination="@id/nav_channels">
+
+    <fragment
+        android:id="@+id/nav_channels"
+        android:name="com.example.homework_2.presentation.ChannelsFragment"
+        android:label="@string/channels"
+        tools:layout="@layout/fragment_channels">
+
+        <action
+            android:id="@+id/action_nav_channels_to_nav_chat"
+            app:destination="@id/nav_chat"/>
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_people"
+        android:name="com.example.homework_2.presentation.PeopleFragment"
+        android:label="@string/people"
+        tools:layout="@layout/fragment_people">
+
+        <action
+            android:id="@+id/action_nav_people_to_nav_profile"
+            app:destination="@id/nav_profile"/>
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.example.homework_2.presentation.ProfileFragment"
+        android:label="@string/profile"
+        tools:layout="@layout/fragment_profile">
+
+        <action
+            android:id="@+id/action_nav_profile_to_nav_channels"
+            app:destination="@id/nav_channels" />
+    </fragment>
+
+    <activity
+        android:id="@+id/nav_chat"
+        android:name="com.example.homework_2.presentation.TopicActivity"
+        tools:layout="@layout/activity_topic">
+
+    </activity>
+
+</navigation>

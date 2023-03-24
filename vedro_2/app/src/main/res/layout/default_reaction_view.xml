@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.homework_2.presentation.custom.ReactionView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/reaction"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/margin_7dp"
+    android:layout_marginEnd="@dimen/margin_10dp"
+    android:background="@drawable/bg_reaction_view"
+    android:padding="@dimen/margin_8dp">
+
+</com.example.homework_2.presentation.custom.ReactionView>
