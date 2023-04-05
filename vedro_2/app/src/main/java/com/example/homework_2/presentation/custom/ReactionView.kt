@@ -8,7 +8,8 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import com.example.homework_2.R
-import com.example.homework_2.model.ReactionCounterItem
+import com.example.homework_2.data.model.ReactionCounterItem
+import com.example.homework_2.presentation.adapter.OnReactionClickListener
 
 class ReactionView @JvmOverloads constructor(
     context: Context,
@@ -23,6 +24,9 @@ class ReactionView @JvmOverloads constructor(
     private val textBounds = Rect()
     private val textPoint = PointF()
     var reaction = ""
+    private var minWidth = 40
+    private lateinit var reactionClickListener: OnReactionClickListener
+    var messageId = 0L
 
     var reactionCount = 0
         set(value) {
@@ -40,6 +44,7 @@ class ReactionView @JvmOverloads constructor(
         val typedArray: TypedArray = context.obtainStyledAttributes(attrs, R.styleable.ReactionView)
         reactionCount = typedArray.getInt(R.styleable.ReactionView_reactionCount, 1)
         reaction = typedArray.getString(R.styleable.ReactionView_reaction) ?: DEFAULT_REACTION
+        minWidth = typedArray.getDimensionPixelSize(R.styleable.ReactionView_minWidth, 40)
         textPaint.color = typedArray.getColor(R.styleable.ReactionView_textColor, Color.WHITE)
         textPaint.textSize = typedArray.getDimension(
             R.styleable.ReactionView_textSize,
@@ -58,7 +63,7 @@ class ReactionView @JvmOverloads constructor(
             var sumWidth = textWidth + paddingLeft + paddingRight
             val sumHeight = textHeight + paddingTop + paddingBottom
 
-            if (sumWidth < 40) sumWidth = 40
+            if (sumWidth < minWidth) sumWidth = minWidth
 
             setMeasuredDimension(
                 resolveSize(sumWidth, widthMeasureSpec),
@@ -90,32 +95,41 @@ class ReactionView @JvmOverloads constructor(
         private const val DEFAULT_DIMENS_SP = 15
         private const val DEFAULT_REACTION = "\uD83D\uDE02"
         private val SUPPORTED_DRAWABLE_STATE = intArrayOf(android.R.attr.state_selected)
-
-        private val onEmojiClick: (v: View) -> Unit = { view ->
-            view.isSelected = !view.isSelected
-            (view as ReactionView).apply {
-                if (isSelected) reactionCount++ else reactionCount--
-                if (reactionCount == 0) {
-                    val emojiBox = (parent as FlexBoxLayout)
-                    emojiBox.removeView(this)
-                    if (emojiBox.childCount == 1) {
-                        emojiBox.getChildAt(0).visibility = GONE
-                    }
-                }
-            }
-        }
+//
+//        private val onEmojiClick: (v: View) -> Unit = { view ->
+//            view.isSelected = !view.isSelected
+//            (view as ReactionView).apply {
+//                if (isSelected) reactionCount++ else reactionCount--
+//                if (reactionCount == 0) {
+//                    val emojiBox = (parent as FlexBoxLayout)
+//                    emojiBox.removeView(this)
+//                    if (emojiBox.childCount == 1) {
+//                        emojiBox.getChildAt(0).visibility = GONE
+//                    }
+//                }
+//            }
+//        }
 
         internal fun createEmojiWithCountView(
             emojiBox: FlexBoxLayout,
-            emoji: ReactionCounterItem
+            emoji: ReactionCounterItem,
+            messageId: Long,
+            reactionClickListener: OnReactionClickListener
         ): ReactionView {
             val emojiView = LayoutInflater.from(emojiBox.context).inflate(
                 R.layout.default_reaction_view,
                 emojiBox,
                 false
             ) as ReactionView
-            emojiView.setOnClickListener(onEmojiClick)
-            emojiView.reaction = emoji.code
+            emojiView.messageId = messageId
+            emojiView.reaction = if (emoji.code.any { it in 'a'..'f' }) {
+                String(Character.toChars(emoji.code.toInt(16)))
+            } else {
+                emoji.code
+            }
+            emojiView.setOnClickListener {
+                reactionClickListener.onReactionClick(emojiView)
+            }
             emojiView.reactionCount = emoji.count
             return emojiView
         }

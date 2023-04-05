@@ -1,11 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="Widget.Coursework" parent="android:Widget"/>
+
+
     <style name="BottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
     </style>
 
     <style name="BottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
         <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="BottomSheetReactionStyle">
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:textSize">36sp</item>
     </style>
 
     <style name="ChannelsTabStyle">
@@ -15,6 +22,21 @@
 
     <style name="Invisible">
         <item name="android:windowTranslucentStatus">true</item>
+    </style>
+
+    <style name="ReactionView">
+        <item name="reaction">"😀"</item>
+        <item name="reactionCount">"1"</item>
+        <item name="textSize">15sp</item>
+        <item name="textColor">@color/grey_300</item>
+        <item name="minWidth">40dp</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:layout_marginEnd">2dp</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:background">@drawable/bg_reaction_view</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
     </style>
 
 </resources>

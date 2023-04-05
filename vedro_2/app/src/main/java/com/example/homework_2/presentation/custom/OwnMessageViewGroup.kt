@@ -13,6 +13,8 @@ class OwnMessageViewGroup @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : ViewGroup(context, attrs) {
 
+    var messageId = 0L
+
     var binding: OwnMessageViewGroupBinding =
         OwnMessageViewGroupBinding.inflate(LayoutInflater.from(context), this)
 

@@ -15,6 +15,7 @@ class MessageViewGroup @JvmOverloads constructor(
     var binding: MessageViewGroupBinding =
         MessageViewGroupBinding.inflate(LayoutInflater.from(context), this)
 
+    var messageId = 0L
     private var messageBlockStart = 0
     private val avatar = binding.avatar
     private val messageBlock = binding.messageBlock
@@ -100,6 +101,4 @@ class MessageViewGroup @JvmOverloads constructor(
     override fun generateLayoutParams(p: LayoutParams): LayoutParams {
         return MarginLayoutParams(p)
     }
-
-
 }

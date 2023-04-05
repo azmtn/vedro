@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/margin_7dp"
     android:layout_marginEnd="@dimen/margin_10dp"
+
     android:background="@drawable/bg_reaction_view"
     android:padding="@dimen/margin_8dp">
 

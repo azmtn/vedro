@@ -1,13 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="ReactionView">
         <attr name="reaction" format="string" />
-        <attr name="reactionCount" format="integer"/>
+        <attr name="reactionCount" format="string"/>
         <attr name="textSize" format="dimension" />
         <attr name="textColor" format="color" />
+        <attr name="minWidth" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="FlexBoxLayout">
-        <attr name="flexBoxTotalWidth" format="dimension" />
+        <attr name="flexMaxWidth" format="dimension" />
     </declare-styleable>
+
 </resources>

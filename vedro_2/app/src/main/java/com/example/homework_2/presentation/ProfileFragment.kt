@@ -4,12 +4,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
 import com.example.homework_2.R
-import com.example.homework_2.data.getUserById
+import com.example.homework_2.Utils.Companion.showSnackBarWithRetryAction
+import com.example.homework_2.data.model.UserItem
+import com.example.homework_2.data.networking.Networking
 import com.example.homework_2.databinding.FragmentProfileBinding
+import com.google.android.material.snackbar.Snackbar
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
 
-class ProfileFragment : Fragment() {
+internal class ProfileFragment : CompositeDisposableFragment() {
 
     private lateinit var binding: FragmentProfileBinding
 
@@ -19,45 +26,101 @@ class ProfileFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentProfileBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+        return binding.root }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.profileOnline.visibility = View.GONE
-        binding.toolbar.visibility = View.VISIBLE
-        binding.logout.visibility = View.GONE
+//        binding.profileOnline.visibility = View.GONE
+//        binding.toolbar.visibility = View.VISIBLE
+//        binding.logout.visibility = View.GONE
+//        binding.profileText.visibility = View.VISIBLE
+//        binding.backIcon.visibility = View.GONE
+//        binding.appBar.visibility = View.VISIBLE
 
         binding.backIcon.setOnClickListener {
             requireActivity().onBackPressed()
         }
 
+        val user: UserItem
+
         if (arguments == null) {
-            val user = getUserById(OWN_USER_ID)
-            if (user != null) {
-                binding.userName.text = user.name
-                binding.profileStatus.text = user.status
-                binding.profileAvatar.setImageResource(R.drawable.avatar_profile)
-                if (user.online) {
-                    binding.profileStatus.visibility = View.VISIBLE
-                }
-                binding.toolbar.visibility = View.GONE
-                binding.logout.visibility = View.VISIBLE
-            }
+            getOwnUser ()
         } else {
-            binding.userName.text = arguments?.getString(USER_NAME)
-            binding.profileStatus.text = arguments?.getString(USER_STATUS_KEY)
-            if (arguments?.getBoolean(USER_ONLINE_STATUS_KEY) == true) {
-                binding.profileOnline.visibility = View.VISIBLE
-            }
-            if (arguments?.getInt(USER_ID) == OWN_USER_ID) {
-                binding.toolbar.visibility = View.GONE
-                binding.logout.visibility = View.VISIBLE
-                binding.profileAvatar.setImageResource(R.drawable.avatar_profile)
-            } else {
-                binding.profileAvatar.setImageResource(R.drawable.avatar)
-            }
+            user = UserItem(
+                userId = requireArguments().getLong(USER_ID),
+                fullName = requireArguments().getString(USER_NAME),
+                email = requireArguments().getString(EMAIL_KEY),
+                avatarUrl = requireArguments().getString(AVATAR_KEY),
+                presence = requireArguments().getString(USER_PRESENCE_KEY)
+            )
+            fillViewsWithUserData(user)
         }
+    }
+
+    private fun fillViewsWithUserData(user: UserItem) {
+        binding.userName.text = user.fullName
+        binding.userPresence.text = user.presence
+        when (user.presence) {
+            ACTIVE_PRESENCE_KEY -> binding.userPresence.setTextColor(
+                binding.root.context.getColor(ACTIVE_PRESENCE_COLOR)
+            )
+            IDLE_PRESENCE_KEY -> binding.userPresence.setTextColor(
+                binding.root.context.getColor(IDLE_PRESENCE_COLOR)
+            )
+            else -> binding.userPresence.setTextColor(
+                binding.root.context.getColor(OFFLINE_PRESENCE_COLOR)
+            )
+        }
+
+        if (user.avatarUrl != null) {
+            Glide.with(binding.root)
+                .asBitmap()
+                .load(user.avatarUrl)
+                .error(R.drawable.avatar)
+                .into(binding.profileAvatar)
+        } else {
+            binding.profileAvatar.setImageResource(R.drawable.avatar)
+        }
+    }
+
+    private fun getOwnUser() {
+        Networking.getZulipApi().getOwnUser()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy (
+                onSuccess = {
+                    getUserPresence(it)
+                },
+                onError = {
+                    binding.root.showSnackBarWithRetryAction(
+                        resources.getString(R.string.people_error),
+                        Snackbar.LENGTH_LONG
+                    ) { getOwnUser() }
+                }
+            )
+            .addTo(compositeDisposable)
+    }
+
+
+    private fun getUserPresence(user: UserItem) {
+        Networking.getZulipApi().getUserPresence(
+            userIdOrEmail = user.userId.toString()
+        )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy (
+                onSuccess = {
+                    user.presence = it?.presence?.aggregated?.status
+                    fillViewsWithUserData(user)
+                },
+                onError = {
+                    binding.root.showSnackBarWithRetryAction(
+                        resources.getString(R.string.people_error),
+                        Snackbar.LENGTH_LONG
+                    ) { getUserPresence(user) }
+                }
+            )
+            .addTo(compositeDisposable)
     }
 
     companion object {
@@ -66,5 +129,18 @@ class ProfileFragment : Fragment() {
         const val USER_NAME = "username"
         const val USER_STATUS_KEY = "status"
         const val USER_ONLINE_STATUS_KEY = "onlineStatus"
+
+
+        const val EMAIL_KEY = "email"
+        const val USER_PRESENCE_KEY = "presence"
+        const val AVATAR_KEY = "avatar"
+
+
+        const val ACTIVE_PRESENCE_KEY = "active"
+        const val IDLE_PRESENCE_KEY = "idle"
+
+        const val ACTIVE_PRESENCE_COLOR = R.color.green_light
+        const val IDLE_PRESENCE_COLOR = R.color.orange
+        const val OFFLINE_PRESENCE_COLOR = R.color.offline
     }
 }

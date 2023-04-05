@@ -17,8 +17,9 @@
     <color name="grey_900">#121212</color>
     <color name="sepia">#E9C46A</color>
     <color name="teal_500">#219653</color>
-
     <color name="grey_850">#323232</color>
+    <color name="orange">#FFB805</color>
+    <color name="offline">#FF0000</color>
     <color name="grey_150">#E5E5E5</color>
     <color name="green_light">#4AB54D</color>
     <color name="grey_250">#BCBCBC</color>

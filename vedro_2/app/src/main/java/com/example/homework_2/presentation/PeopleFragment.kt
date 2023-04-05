@@ -5,17 +5,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.findFragment
 import androidx.navigation.fragment.NavHostFragment
 import com.example.homework_2.R
-import com.example.homework_2.data.usersitems
+import com.example.homework_2.Utils.Companion.snackBarAction
 import com.example.homework_2.databinding.FragmentPeopleBinding
-import com.example.homework_2.model.UserItem
-import com.example.homework_2.presentation.adapter.UserItemClickListener
+import com.example.homework_2.data.model.UserItem
+import com.example.homework_2.data.networking.Networking
+import com.example.homework_2.presentation.adapter.OnUserItemClickListener
 import com.example.homework_2.presentation.adapter.PeopleAdapter
+import com.google.android.material.snackbar.Snackbar
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.rxkotlin.addTo
+import io.reactivex.rxkotlin.subscribeBy
+import io.reactivex.schedulers.Schedulers
 
-internal class PeopleFragment: Fragment(), UserItemClickListener {
+internal class PeopleFragment: CompositeDisposableFragment(), OnUserItemClickListener {
 
     private lateinit var binding: FragmentPeopleBinding
 
@@ -33,21 +38,69 @@ internal class PeopleFragment: Fragment(), UserItemClickListener {
         configurePeopleListRecycler()
     }
 
-    override fun userItemClickListener(topicItemView: View?, user: UserItem) {
-        topicItemView?.setOnClickListener {
+    override fun userItemClickListener(user: UserItem) {
             val bundle = bundleOf(
-                ProfileFragment.USER_ID to user.id,
-                ProfileFragment.USER_NAME to user.name,
-                ProfileFragment.USER_STATUS_KEY to user.status,
-                ProfileFragment.USER_ONLINE_STATUS_KEY to user.online
+                ProfileFragment.USER_ID to user.userId,
+                ProfileFragment.USER_NAME to user.fullName,
+                ProfileFragment.EMAIL_KEY to user.email,
+                ProfileFragment.AVATAR_KEY to user.avatarUrl,
+                ProfileFragment.USER_PRESENCE_KEY to user.presence
             )
             NavHostFragment.findNavController(binding.root.findFragment())
                 .navigate(R.id.action_nav_people_to_nav_profile, bundle)
         }
-    }
 
     private fun configurePeopleListRecycler() {
-        binding.peopleList.adapter = PeopleAdapter(this).apply { users = usersitems }
+        val adapter = PeopleAdapter(this)
+
+        Networking.getZulipApi().getAllUsers()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy(
+                onSuccess = {
+                    adapter.apply {
+                        initShimmer = false
+                        users = it.members
+                        users.forEach { user ->
+                            getUserPresence(user)
+                        }
+                        notifyDataSetChanged()
+                    }
+                },
+                onError = {
+                    adapter.apply {
+                        initShimmer = false
+                        users = listOf()
+                        notifyDataSetChanged()
+                    }
+
+                    binding.root.snackBarAction(
+                        resources.getString(R.string.people_error),
+                        Snackbar.LENGTH_LONG
+                    ) { configurePeopleListRecycler() }
+                }
+            ).addTo(compositeDisposable)
+
+        binding.peopleList.adapter =  adapter
     }
 
+    private fun getUserPresence(user: UserItem) {
+        Networking.getZulipApi().getUserPresence(userIdOrEmail = user.userId.toString())
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy(
+                onSuccess = {
+                    user.presence = it.presence.aggregated?.status ?: NOT_FOUND_PRESENCE_KEY
+                },
+                onError = {
+                    user.presence = NOT_FOUND_PRESENCE_KEY
+                }
+            )
+            .addTo(compositeDisposable)
+    }
+
+    companion object {
+
+        const val NOT_FOUND_PRESENCE_KEY = "not found"
+    }
 }

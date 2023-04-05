@@ -1,10 +1,10 @@
 package com.example.homework_2.presentation.adapter
 
 import androidx.recyclerview.widget.DiffUtil
-import com.example.homework_2.model.MessageItem
+import com.example.homework_2.data.model.MessageItem
 import java.time.LocalDate
 
-class MessageListDiffCallback: DiffUtil.ItemCallback<Any>() {
+class MessageListDiffCallback : DiffUtil.ItemCallback<Any>() {
 
     override fun areItemsTheSame(oldItem: Any, newItem: Any): Boolean {
         if (oldItem is MessageItem && newItem is MessageItem) {

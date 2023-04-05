@@ -1,41 +1,56 @@
 package com.example.homework_2.presentation.custom
 
 import android.content.Context
+import android.content.res.TypedArray
 import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.core.view.*
+import com.example.homework_2.R
 
 class FlexBoxLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : ViewGroup(context, attrs) {
 
+    private var maxWidth: Int?
+
+    init {
+        val a: TypedArray = context.obtainStyledAttributes(attrs, R.styleable.FlexBoxLayout)
+        maxWidth = a.getDimensionPixelSize(R.styleable.FlexBoxLayout_flexMaxWidth, 0)
+        if (maxWidth == 0) maxWidth = null
+        a.recycle()
+    }
+
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         var currentStringWidth = 0
         var currentStringHeight = 0
         var totalHeight = 0
-        var maxWidth = 0
+        var maxCurrentStringWidth = 0
         val widthSize = MeasureSpec.getSize(widthMeasureSpec)
         children.forEach { child ->
             measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0)
-            currentStringHeight = maxOf(currentStringHeight, child.measuredHeight + child.marginTop + child.marginBottom)
-            if (currentStringWidth + child.measuredWidth + child.marginRight + child.marginLeft <= widthSize) {
+            currentStringHeight = maxOf(
+                currentStringHeight,
+                child.measuredHeight + child.marginTop + child.marginBottom
+            )
+            if (currentStringWidth + child.measuredWidth + child.marginRight + child.marginLeft <= maxWidth ?: widthSize) {
                 currentStringWidth += child.measuredWidth + child.marginRight + child.marginLeft
             } else {
-                maxWidth = maxOf(currentStringWidth, maxWidth)
+                maxCurrentStringWidth = maxOf(currentStringWidth, maxCurrentStringWidth)
                 currentStringWidth = child.measuredWidth + child.marginRight + child.marginLeft
                 totalHeight += currentStringHeight
             }
         }
-        if (childCount > 1 && maxWidth == 0) {
-            maxWidth = currentStringWidth
+        if (childCount > 1 && maxCurrentStringWidth == 0) {
+            maxCurrentStringWidth = currentStringWidth
             totalHeight = currentStringHeight
         } else {
-            maxWidth = maxOf(currentStringWidth, maxWidth)
+            maxCurrentStringWidth = maxOf(currentStringWidth, maxCurrentStringWidth)
             totalHeight += currentStringHeight
         }
         setMeasuredDimension(
-            resolveSize(maxWidth, widthMeasureSpec),
+            resolveSize(maxCurrentStringWidth, widthMeasureSpec),
             resolveSize(totalHeight, heightMeasureSpec)
         )
     }

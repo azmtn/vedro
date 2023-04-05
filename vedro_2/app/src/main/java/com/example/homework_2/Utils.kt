@@ -1,43 +1,35 @@
 package com.example.homework_2
 
-import android.content.Context
-import android.util.DisplayMetrics
 import android.view.View
 import androidx.core.view.marginBottom
 import androidx.core.view.marginLeft
 import androidx.core.view.marginRight
 import androidx.core.view.marginTop
-import com.example.homework_2.data.messagesItem
-import com.example.homework_2.model.ReactionCounterItem
-import com.example.homework_2.model.MessageItem
-import kotlin.math.roundToInt
+import com.example.homework_2.data.model.ReactionCounterItem
+import com.example.homework_2.data.model.Reaction
+import com.example.homework_2.data.model.SELF_USER_ID
+import com.google.android.material.snackbar.Snackbar
+import io.reactivex.Single
+import java.time.Instant
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 class Utils {
     companion object {
-        fun dpToPx(dp: Int, context: Context): Int {
-            val displayMetrics: DisplayMetrics = context.resources.displayMetrics
-            return (dp * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
-        }
 
-        fun getEmojisForMessage(messageId: Int): List<ReactionCounterItem> {
-            val message = messagesItem.first { it is MessageItem && it.id == messageId }
-            return if (message is MessageItem) {
-                val emojiList = mutableListOf<ReactionCounterItem>()
-                message.reactions
-                    .groupBy { reaction -> reaction.code }
-                    .map { emoji -> emoji.key to emoji.value.size }
-                    .mapTo(emojiList) { emoji -> ReactionCounterItem(emoji.first, emoji.second) }
-
-                emojiList.forEach { emojiWithCount ->
-                    val selfReaction = message.reactions.firstOrNull { reaction ->
-                        reaction.userId == 1 && reaction.code == emojiWithCount.code
+        fun getEmojisForMessage(reactions: List<Reaction>): List<ReactionCounterItem> {
+            return reactions
+                .groupBy { reaction -> reaction.emojiCode }
+                .map { emoji -> ReactionCounterItem(emoji.key, emoji.value.size) }
+                .map { emojiWithCount ->
+                    val selfReaction = reactions.firstOrNull { reaction ->
+                        reaction.userId == SELF_USER_ID && reaction.emojiCode == emojiWithCount.code
                     }
                     if (selfReaction != null) emojiWithCount.selectedByCurrentUser = true
+                    emojiWithCount
                 }
-                return emojiList
-            } else {
-                listOf()
-            }
         }
 
         fun measuredWidthWithMargins(view: View): Int {
@@ -48,5 +40,44 @@ class Utils {
             return view.measuredHeight + view.marginTop + view.marginBottom
 
         }
+
+        internal fun <T> waitItemTestError(item: T): Single<T> {
+            return Single.fromCallable {
+                if (Random.nextBoolean()) throw Exception()
+                item
+            }
+                .delay(1000, TimeUnit.MILLISECONDS, true)
+        }
+
+        internal fun View.snackBarAction(
+            text: CharSequence,
+            duration: Int,
+            action: () -> Unit
+        ) {
+            Snackbar.make(this, text, duration).apply {
+                setAction(context.getString(R.string.retry_action_snack_bar)) { action() }
+            }
+                .show()
+        }
+
+        internal fun getDateTimeFromTimestamp(timestamp: Long): LocalDateTime {
+            return LocalDateTime.ofInstant(
+                Instant.ofEpochSecond(timestamp),
+                TimeZone.getDefault().toZoneId()
+            )
+        }
+
+        internal fun View.showSnackBarWithRetryAction(
+            text: CharSequence,
+            duration: Int,
+            action: () -> Unit
+        ) {
+            Snackbar.make(this, text, duration).apply {
+                setAction(context.getString(R.string.retry_action_snack_bar)) { action() }
+            }
+                .show()
+        }
     }
+
+
 }

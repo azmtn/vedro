@@ -1,0 +1,11 @@
+package com.example.homework_2.data.model
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class AllChannelsListResponse (
+
+    @SerialName("streams")
+    val streams: List<StreamItem>
+)
